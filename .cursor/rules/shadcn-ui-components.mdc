@@ -1,0 +1,20 @@
+---
+description: Enforce shadcn UI for all interface components
+alwaysApply: true
+---
+
+# Shadcn UI Components Rule
+
+- Use shadcn UI for all user interface components in this project.
+- Do not build custom base UI primitives if a shadcn component exists.
+- If a required shadcn component is missing, install it with:
+
+```bash
+npx shadcn@latest add <component-name>
+```
+
+Example:
+
+```bash
+npx shadcn@latest add accordion
+```
