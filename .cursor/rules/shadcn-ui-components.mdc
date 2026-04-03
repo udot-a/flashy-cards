@@ -1,13 +1,24 @@
 ---
-description: Enforce shadcn UI for all interface components
+description: Enforce shadcn UI exclusively for all interface; no custom UI; Clerk via modal + shadcn Button
 alwaysApply: true
 ---
 
-# Shadcn UI Components Rule
+# Shadcn UI Components Rule (strict)
 
-- Use shadcn UI for all user interface components in this project.
-- Do not build custom base UI primitives if a shadcn component exists.
-- If a required shadcn component is missing, install it with:
+## Non-negotiable
+
+- **Only shadcn UI** may be used for user interface in this project: layout, typography, forms, dialogs, buttons, inputs, navigation, feedback, and every other visible or interactive UI surface.
+- **Do not create custom UI**: no hand-rolled buttons, inputs, modals, cards, dropdowns, tabs, or other bespoke primitives or composites. If something is not covered by an installed shadcn component, **add the matching shadcn component** (or compose existing shadcn pieces) rather than inventing new UI.
+- **Styling** must stay within shadcn/Tailwind patterns already used by the project (variants, `cn()`, tokens). Do not introduce parallel “design system” components.
+
+## Clerk authentication UI
+
+- **Sign-in and sign-up triggers** must use **shadcn `Button`** (or another shadcn control that is appropriate) as the visible control—not raw `<button>`, Clerk’s default unstyled triggers as the only UI, or custom-styled elements.
+- **Sign-in and sign-up** must launch in a **Clerk modal**: `mode="modal"` on `<SignInButton>` and `<SignUpButton>` (or the same behavior via equivalent Clerk APIs). Do not use full-page `<SignIn />` / `<SignUp />` as the primary way users open authentication from the product UI.
+
+## Adding components
+
+If a required shadcn component is missing, install it with:
 
 ```bash
 npx shadcn@latest add <component-name>
