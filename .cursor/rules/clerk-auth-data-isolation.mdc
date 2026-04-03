@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+# Clerk authentication and data isolation
+
+- **Auth provider:** All authentication is handled by **Clerk** (`@clerk/nextjs`). The app wires Clerk via [app/layout.tsx](mdc:app/layout.tsx) (`ClerkProvider`) and [proxy.ts](mdc:proxy.ts) (`clerkMiddleware`). Do not add parallel auth systems or trust ad-hoc cookies/headers for identity on the server.
+
+- **Server-side identity:** In Server Components, Route Handlers, and Server Actions, get the current user only from Clerk server APIs (e.g. `auth()` from `@clerk/nextjs/server`, and `currentUser()` when you need profile fields). If there is no `userId`, treat the caller as unauthenticated and do not expose private data.
+
+- **Mandatory ownership checks:** Users must only read or mutate rows that belong to them. **Never** use a `userId` (or similar) from the request body, query string, or path as proof of identity — only Clerk’s `userId` counts.
+
+- **Schema mapping:** In [lib/db/schema.ts](mdc:lib/db/schema.ts), `decks.clerkUserId` stores the owning Clerk user id. **Cards** are scoped through their `deckId` → parent `decks` row: any select/update/delete for a card must ensure that deck’s `clerkUserId` equals the current Clerk `userId` (single query with a join/`where` on both, or an explicit pre-check). Do not query cards by id alone without tying them to an owned deck.
+
+- **Drizzle queries:** Combine Drizzle filters so every mutating or sensitive read includes `eq(decks.clerkUserId, userId)` (or the equivalent for new tables that add per-user ownership). Prefer failing closed (empty result or 403/404) when the row does not exist **for that user**, not when it exists for someone else (avoid leaking existence of other users’ ids).
+
+- **New tables:** If you add tables, include an explicit owner key (e.g. `clerkUserId` referencing the same Clerk id string) or a foreign key to an already user-scoped parent, and enforce the same pattern in every code path that touches the data.
+
+This complements the Drizzle rule: all DB access stays Drizzle-based **and** every path is filtered by the Clerk-authenticated user.

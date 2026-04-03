@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+# Drizzle database access
+
+- All database reads and writes go through Drizzle using the shared schema and the exported `db` client.
+- Define and extend tables, relations, and indexes in [lib/db/schema.ts](mdc:lib/db/schema.ts). Import table/relation symbols from there for queries.
+- Obtain the client from [lib/db/index.ts](mdc:lib/db/index.ts) (`db`); it is configured with the schema for relational queries.
+- Use Drizzle’s query builder (`db.select`, `db.insert`, `db.update`, `db.delete`, `db.query.*`, etc.) and `drizzle-orm` helpers — not raw `neon` / `pg` SQL strings, not another ORM, and not hand-written SQL in application code except where the toolchain explicitly requires it (e.g. Drizzle Kit migrations).
+
+When adding new persistence:
+
+1. Add or update definitions in `schema.ts`.
+2. Run migrations / `drizzle-kit` as the project already does.
+3. Use typed Drizzle operations against `db` and the exported table objects.

@@ -1,0 +1,26 @@
+---
+alwaysApply: true
+description: Server Components for DB reads, Server Actions for mutations, Zod validation and typed action payloads (no FormData as the type).
+---
+# Server data access, mutations, and validation
+
+Database access follows [drizzle-database.mdc](mdc:.cursor/rules/drizzle-database.mdc) and [clerk-auth-data-isolation.mdc](mdc:.cursor/rules/clerk-auth-data-isolation.mdc). This rule adds **where** reads and writes run and **how** inputs are validated.
+
+## Reads (retrieval)
+
+- **Fetch database-backed data in Server Components** (async RSC, `cache`/`fetch` as appropriate). Do not use client-side data fetching (e.g. `useEffect` + API routes) as the primary path for loading app data from the DB when a Server Component can do it.
+
+## Writes (insert / update / delete)
+
+- **All mutations** that touch the database must go through **Server Actions** (`"use server"`), not client-only calls that hit the DB, and not ad-hoc Route Handlers unless the project already standardizes on actions for this app.
+
+## Validation (Zod)
+
+- **Validate inputs with Zod** before trusting data for queries or mutations (parse `unknown` / raw fields; use `.safeParse` or `parse` consistently with the rest of the codebase).
+
+## Server Action arguments
+
+- **Every Server Action** that accepts client-supplied data must:
+  1. Define a **Zod schema** for that payload.
+  2. Expose a **TypeScript type** derived from the schema (e.g. `z.infer<typeof schema>`) or an equivalent explicit type that matches the parsed output.
+  3. **Do not** type the action’s parameters as `FormData` (or rely on `FormData` as the public contract). If the form posts `FormData`, convert fields to a plain object and parse with Zod inside the action; the **validated, typed** shape is what the rest of the action uses.
