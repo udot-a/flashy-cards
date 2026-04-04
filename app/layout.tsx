@@ -10,6 +10,7 @@ import { dark } from "@clerk/themes";
 import Link from "next/link";
 import { Poppins } from "next/font/google";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -64,6 +65,7 @@ export default function RootLayout({
             </div>
           </header>
           {children}
+          <Toaster richColors closeButton position="top-center" />
         </ClerkProvider>
       </body>
     </html>

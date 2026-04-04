@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { listDecksForUser } from "@/lib/decks";
+import { listDecksForUser } from "@/lib/db/queries/decks";
 
 export const metadata: Metadata = {
   title: "Dashboard",

@@ -13,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { EditDeckDialog } from "@/app/dashboard/decks/[deckId]/edit-deck-dialog";
 import type { DeckPageProps } from "@/interfaces/deck-page.interface";
 import { listCardsForOwnedDeck } from "@/lib/db/queries/cards";
@@ -75,7 +74,6 @@ export default async function DeckPage({ params }: DeckPageProps) {
   }
 
   const cardList = await listCardsForOwnedDeck(userId, deckId);
-  const studyProgress = 0;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 py-8">
@@ -117,43 +115,16 @@ export default async function DeckPage({ params }: DeckPageProps) {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6 border-t border-border px-6 pt-6 pb-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-4 text-sm">
-                <span className="font-medium text-foreground">
-                  Study Progress
-                </span>
-                <span className="tabular-nums text-muted-foreground">
-                  {studyProgress}%
-                </span>
-              </div>
-              <Progress
-                value={studyProgress}
-                className="h-1.5 bg-muted"
-                aria-label="Study progress"
-              />
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-              <Button
-                variant="default"
-                size="lg"
-                type="button"
-                className="h-11 w-full sm:flex-1 sm:text-base"
-              >
-                <Play data-icon="inline-start" className="size-4" />
-                Start Study Session
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                type="button"
-                className="h-11 w-full sm:w-auto sm:px-6 sm:text-base"
-              >
-                <Plus data-icon="inline-start" className="size-4" />
-                Add Card
-              </Button>
-            </div>
+          <CardContent className="border-t border-border px-6 pt-6 pb-6">
+            <Button
+              variant="default"
+              size="lg"
+              type="button"
+              className="h-11 w-full sm:text-base"
+            >
+              <Play data-icon="inline-start" className="size-4" />
+              Start Study Session
+            </Button>
           </CardContent>
         </Card>
 
