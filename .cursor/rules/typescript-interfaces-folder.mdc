@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+description: Where to place shared TypeScript interfaces and types (interfaces folder, *.interface.ts naming).
+---
+
+# Types and interfaces location
+
+- Put **new, exported** `interface` and `type` definitions that represent a **domain entity**, **DTO**, **view model**, or other **shared contract** in the root [`interfaces/`](mdc:interfaces/) directory.
+- **One file per main concept**, named after its semantic entity (or value) using **kebab-case**, with the suffix **`.interface.ts`**:
+
+  - `interfaces/deck.interface.ts`
+  - `interfaces/flash-card.interface.ts`
+  - `interfaces/study-session.interface.ts`
+
+- **Import** from the app using the existing path alias, e.g. `@/interfaces/deck.interface` (omit `.ts` in the import path per project style).
+
+## Exceptions (keep local)
+
+- **File-private** helpers: small `type` aliases used only inside a single module and not exported may stay in that file.
+- **Zod schemas and `z.infer`**: keep schema definitions in [`lib/validation/`](mdc:lib/validation/) (or the project’s validation location). If a **shared** inferred shape is part of the public API, you may re-export or mirror a clear type in `interfaces/` when it improves discoverability—do not duplicate conflicting definitions.
+
+## Do not
+
+- Scatter reusable entity-facing types across components, pages, or actions when they belong in `interfaces/`.
+- Use a different naming pattern for these files (stick to `*.interface.ts` under `interfaces/`).
