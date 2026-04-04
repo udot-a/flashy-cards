@@ -1,18 +1,24 @@
 ---
 alwaysApply: true
-description: Server Components for DB reads, Server Actions for mutations, Zod validation and typed action payloads (no FormData as the type).
+description: DB access only via lib/db/queries helpers; Server Components for reads, Server Actions for mutations; Zod validation and typed action payloads (no FormData as the type).
 ---
 # Server data access, mutations, and validation
 
-Database access follows [drizzle-database.mdc](mdc:.cursor/rules/drizzle-database.mdc) and [clerk-auth-data-isolation.mdc](mdc:.cursor/rules/clerk-auth-data-isolation.mdc). This rule adds **where** reads and writes run and **how** inputs are validated.
+Database access follows [drizzle-database.mdc](mdc:.cursor/rules/drizzle-database.mdc) and [clerk-auth-data-isolation.mdc](mdc:.cursor/rules/clerk-auth-data-isolation.mdc). This rule adds **where** reads and writes run, **that Drizzle calls live in a single query layer**, and **how** inputs are validated.
+
+## Database queries layer (`lib/db/queries`)
+
+- **All** database reads and writes must be implemented as **exported helper functions** under **`lib/db/queries/`** (add files there and import from `@/lib/db/queries/...` as needed). Helpers use the shared `db` client and schema per the Drizzle rule.
+- **Do not** embed Drizzle query builder usage (`db.select`, `db.insert`, `db.update`, `db.delete`, `db.query.*`, etc.) directly in Server Components, Server Actions, Route Handlers, or other app modules—**call the query helpers instead**. The only place application code should construct those operations is inside `lib/db/queries/`.
+- Organize helpers by domain (e.g. `decks.ts`, `cards.ts`) as the codebase grows.
 
 ## Reads (retrieval)
 
-- **Fetch database-backed data in Server Components** (async RSC, `cache`/`fetch` as appropriate). Do not use client-side data fetching (e.g. `useEffect` + API routes) as the primary path for loading app data from the DB when a Server Component can do it.
+- **Fetch database-backed data in Server Components** (async RSC, `cache`/`fetch` as appropriate) by calling **`lib/db/queries`** helpers. Do not use client-side data fetching (e.g. `useEffect` + API routes) as the primary path for loading app data from the DB when a Server Component can do it.
 
 ## Writes (insert / update / delete)
 
-- **All mutations** that touch the database must go through **Server Actions** (`"use server"`), not client-only calls that hit the DB, and not ad-hoc Route Handlers unless the project already standardizes on actions for this app.
+- **All mutations** that touch the database must go through **Server Actions** (`"use server"`), not client-only calls that hit the DB, and not ad-hoc Route Handlers unless the project already standardizes on actions for this app. Actions validate input (Zod) then call **`lib/db/queries`** mutation helpers—**do not** run Drizzle mutations inline in the action body.
 
 ## Validation (Zod)
 

@@ -3,11 +3,9 @@ import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -53,31 +51,26 @@ export default async function DashboardPage() {
           <ul className="mt-8 grid gap-4 sm:grid-cols-2">
             {deckList.map((deck) => (
               <li key={deck.id}>
-                <Card className="h-full py-0">
-                  <CardHeader className="gap-3 px-6 pb-4 pt-6">
-                    <CardTitle className="text-lg leading-snug font-semibold text-card-foreground">
-                      {deck.title}
-                    </CardTitle>
-                    <CardAction>
-                      <Badge variant="secondary" className="font-normal">
-                        {formatDeckDate(deck.createdAt)}
-                      </Badge>
-                    </CardAction>
-                    <CardDescription className="text-sm leading-relaxed">
-                      {deck.description?.trim()
-                        ? deck.description
-                        : "No description yet."}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter className="justify-between gap-3 border-border px-6 py-4">
-                    <span className="text-sm text-muted-foreground">
-                      Ready to study
-                    </span>
-                    <Button variant="default" size="sm" asChild>
-                      <Link href={`/dashboard/decks/${deck.id}`}>Study</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+                <Link
+                  href={`/dashboard/decks/${deck.id}`}
+                  className="group/deck-card block h-full rounded-2xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <Card className="h-full gap-0 rounded-2xl border border-border bg-card py-0 ring-0 transition-colors group-hover/deck-card:bg-muted/30 group-focus-visible/deck-card:bg-muted/30">
+                    <CardHeader className="space-y-2 px-6 pt-6 pb-5">
+                      <CardTitle className="text-xl font-bold leading-snug tracking-tight text-card-foreground">
+                        {deck.title}
+                      </CardTitle>
+                      {deck.description?.trim() ? (
+                        <CardDescription className="text-base leading-relaxed text-muted-foreground">
+                          {deck.description.trim()}
+                        </CardDescription>
+                      ) : null}
+                    </CardHeader>
+                    <CardFooter className="justify-start border-t border-border bg-transparent px-6 py-4 text-sm leading-normal text-muted-foreground">
+                      Last updated: {formatDeckDate(deck.updatedAt)}
+                    </CardFooter>
+                  </Card>
+                </Link>
               </li>
             ))}
           </ul>

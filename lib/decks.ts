@@ -9,7 +9,7 @@ export async function listDecksForUser(clerkUserId: string) {
       id: decks.id,
       title: decks.title,
       description: decks.description,
-      createdAt: decks.createdAt,
+      updatedAt: decks.updatedAt,
     })
     .from(decks)
     .where(eq(decks.clerkUserId, clerkUserId))
