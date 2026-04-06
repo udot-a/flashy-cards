@@ -20,3 +20,8 @@ export const updateCardPayloadSchema = cardFormSchema.extend({
   deckId: z.number().int().positive(),
   cardId: z.number().int().positive(),
 });
+
+export const deleteCardPayloadSchema = z.object({
+  deckId: z.number().int().positive(),
+  cardId: z.number().int().positive(),
+});

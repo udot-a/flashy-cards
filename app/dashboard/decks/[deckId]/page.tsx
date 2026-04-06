@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { ArrowLeft, Play, Plus, SquarePen } from "lucide-react";
+import { ArrowLeft, Play } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,6 +13,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AddCardDialog } from "@/app/dashboard/decks/[deckId]/add-card-dialog";
+import { DeleteCardDialog } from "@/app/dashboard/decks/[deckId]/delete-card-dialog";
+import { EditCardDialog } from "@/app/dashboard/decks/[deckId]/edit-card-dialog";
 import { EditDeckDialog } from "@/app/dashboard/decks/[deckId]/edit-deck-dialog";
 import type { DeckPageProps } from "@/interfaces/deck-page.interface";
 import { listCardsForOwnedDeck } from "@/lib/db/queries/cards";
@@ -139,15 +142,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
             >
               Cards
             </h2>
-            <Button
-              variant="outline"
-              size="default"
-              type="button"
-              className="w-full sm:w-auto"
-            >
-              <Plus data-icon="inline-start" />
-              Add Card
-            </Button>
+            <AddCardDialog deckId={deck.id} />
           </div>
 
           {cardList.length === 0 ? (
@@ -160,9 +155,15 @@ export default async function DeckPage({ params }: DeckPageProps) {
                 <li key={card.id}>
                   <Card className="h-full gap-0 rounded-xl border border-border bg-card py-0 shadow-none ring-1 ring-foreground/10">
                     <CardHeader className="space-y-4 px-5 pt-5 pb-0">
-                      <p className="text-xs text-muted-foreground">
-                        Card #{index + 1}
-                      </p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                          Card #{index + 1}
+                        </p>
+                        <DeleteCardDialog
+                          deckId={deck.id}
+                          cardId={card.id}
+                        />
+                      </div>
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-foreground">
                           Front
@@ -187,15 +188,12 @@ export default async function DeckPage({ params }: DeckPageProps) {
                       </div>
                     </CardHeader>
                     <CardFooter className="flex flex-col rounded-b-xl border-t border-border bg-transparent px-5 pt-4 pb-5">
-                      <Button
-                        variant="outline"
-                        size="default"
-                        type="button"
-                        className="w-full"
-                      >
-                        <SquarePen data-icon="inline-start" />
-                        Edit
-                      </Button>
+                      <EditCardDialog
+                        deckId={deck.id}
+                        cardId={card.id}
+                        defaultFront={card.front}
+                        defaultBack={card.back}
+                      />
                     </CardFooter>
                   </Card>
                 </li>
