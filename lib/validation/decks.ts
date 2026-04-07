@@ -12,6 +12,14 @@ export const editDeckFormSchema = z.object({
     .max(2000, "Description must be at most 2000 characters"),
 });
 
+export const createDeckPayloadSchema = editDeckFormSchema.transform(
+  (data) => ({
+    title: data.title,
+    description:
+      data.description.trim() === "" ? null : data.description.trim(),
+  }),
+);
+
 export const updateDeckPayloadSchema = editDeckFormSchema
   .extend({
     deckId: z.number().int().positive(),
@@ -22,3 +30,7 @@ export const updateDeckPayloadSchema = editDeckFormSchema
     description:
       data.description.trim() === "" ? null : data.description.trim(),
   }));
+
+export const deleteDeckPayloadSchema = z.object({
+  deckId: z.number().int().positive(),
+});

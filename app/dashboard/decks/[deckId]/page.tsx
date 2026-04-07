@@ -122,11 +122,13 @@ export default async function DeckPage({ params }: DeckPageProps) {
             <Button
               variant="default"
               size="lg"
-              type="button"
               className="h-11 w-full sm:text-base"
+              asChild
             >
-              <Play data-icon="inline-start" className="size-4" />
-              Start Study Session
+              <Link href={`/dashboard/decks/${deck.id}/study`}>
+                <Play data-icon="inline-start" className="size-4" />
+                Start Study Session
+              </Link>
             </Button>
           </CardContent>
         </Card>

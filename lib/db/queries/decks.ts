@@ -5,6 +5,7 @@ import type {
   DeckListRow,
 } from "@/interfaces/deck.interface";
 import type { DeckUpdateFields } from "@/interfaces/update-deck.interface";
+import type { CreateDeckPayload } from "@/interfaces/create-deck.interface";
 import { db } from "@/lib/db";
 import { decks } from "@/lib/db/schema";
 
@@ -42,6 +43,22 @@ export async function getDeckForUser(
   return rows[0];
 }
 
+export async function insertDeckForUser(
+  clerkUserId: string,
+  data: CreateDeckPayload,
+) {
+  const rows = await db
+    .insert(decks)
+    .values({
+      clerkUserId,
+      title: data.title,
+      description: data.description,
+    })
+    .returning({ id: decks.id });
+
+  return rows[0];
+}
+
 export async function updateDeckForUser(
   clerkUserId: string,
   deckId: number,
@@ -58,4 +75,17 @@ export async function updateDeckForUser(
     .returning({ id: decks.id });
 
   return rows[0];
+}
+
+/** Removes the deck for the user. Related cards are removed by DB `onDelete: "cascade"`. */
+export async function deleteDeckForUser(
+  clerkUserId: string,
+  deckId: number,
+): Promise<boolean> {
+  const rows = await db
+    .delete(decks)
+    .where(and(eq(decks.id, deckId), eq(decks.clerkUserId, clerkUserId)))
+    .returning({ id: decks.id });
+
+  return rows.length > 0;
 }
