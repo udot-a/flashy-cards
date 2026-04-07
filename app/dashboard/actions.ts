@@ -4,7 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 
 import type { CreateDeckActionResult } from "@/interfaces/create-deck.interface";
 import type { DeleteDeckActionResult } from "@/interfaces/delete-deck.interface";
-import { deleteDeckForUser, insertDeckForUser } from "@/lib/db/queries/decks";
+import { FREE_PLAN_DECK_LIMIT } from "@/lib/billing";
+import {
+  countDecksForUser,
+  deleteDeckForUser,
+  insertDeckForUser,
+} from "@/lib/db/queries/decks";
 import {
   createDeckPayloadSchema,
   deleteDeckPayloadSchema,
@@ -13,9 +18,19 @@ import {
 export async function createDeckAction(
   input: unknown,
 ): Promise<CreateDeckActionResult> {
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     return { ok: false, message: "You must be signed in to create a deck." };
+  }
+
+  if (!has({ feature: "unlimited_decks" })) {
+    const deckCount = await countDecksForUser(userId);
+    if (deckCount >= FREE_PLAN_DECK_LIMIT) {
+      return {
+        ok: false,
+        message: `The free plan is limited to ${FREE_PLAN_DECK_LIMIT} decks. Upgrade to create more.`,
+      };
+    }
   }
 
   const parsed = createDeckPayloadSchema.safeParse(input);

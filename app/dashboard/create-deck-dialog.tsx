@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -22,8 +23,15 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { editDeckFormSchema } from "@/lib/validation/decks";
+import { FREE_PLAN_DECK_LIMIT } from "@/lib/billing";
 
-export function CreateDeckDialog() {
+type CreateDeckDialogProps = {
+  canCreateDeck?: boolean;
+};
+
+export function CreateDeckDialog({
+  canCreateDeck = true,
+}: CreateDeckDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -46,6 +54,24 @@ export function CreateDeckDialog() {
       });
     }
   }, [open, reset]);
+
+  if (!canCreateDeck) {
+    return (
+      <div className="flex max-w-lg flex-col gap-3">
+        <Button variant="default" size="lg" type="button" disabled>
+          <Plus data-icon="inline-start" />
+          Create a New Deck
+        </Button>
+        <div className="text-sm text-muted-foreground">
+          The free plan includes up to {FREE_PLAN_DECK_LIMIT} decks.{" "}
+          <Button variant="link" className="h-auto p-0 text-sm" asChild>
+            <Link href="/pricing">Upgrade</Link>
+          </Button>{" "}
+          for unlimited decks.
+        </div>
+      </div>
+    );
+  }
 
   function onSubmit(values: EditDeckFormValues) {
     startTransition(async () => {

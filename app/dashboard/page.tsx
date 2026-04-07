@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FREE_PLAN_DECK_LIMIT } from "@/lib/billing";
 import { listDecksForUser } from "@/lib/db/queries/decks";
 
 export const metadata: Metadata = {
@@ -26,12 +27,15 @@ function formatDeckDate(value: Date) {
 }
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     return null;
   }
 
   const deckList = await listDecksForUser(userId);
+  const canCreateDeck =
+    has({ feature: "unlimited_decks" }) ||
+    deckList.length < FREE_PLAN_DECK_LIMIT;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 py-8">
@@ -80,7 +84,7 @@ export default async function DashboardPage() {
         )}
 
         <div className="mt-8">
-          <CreateDeckDialog />
+          <CreateDeckDialog canCreateDeck={canCreateDeck} />
         </div>
       </main>
     </div>
