@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Poppins } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -41,31 +42,33 @@ export default function RootLayout({
           signInFallbackRedirectUrl="/dashboard"
           signUpFallbackRedirectUrl="/dashboard"
         >
-          <header className="flex w-full items-center justify-between gap-4 border-b border-border bg-background px-4 py-3">
-            <Link
-              href="/"
-              className="text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
-            >
-              Flashy Cards
-            </Link>
-            <div className="flex shrink-0 items-center gap-2">
-              <Show when="signed-out">
-                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                  <Button variant="outline" size="sm">
-                    Sign in
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
-                  <Button size="sm">Sign up</Button>
-                </SignUpButton>
-              </Show>
-              <Show when="signed-in">
-                <UserButton />
-              </Show>
-            </div>
-          </header>
-          {children}
-          <Toaster richColors closeButton position="top-center" />
+          <TooltipProvider>
+            <header className="flex w-full items-center justify-between gap-4 border-b border-border bg-background px-4 py-3">
+              <Link
+                href="/"
+                className="text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
+              >
+                Flashy Cards
+              </Link>
+              <div className="flex shrink-0 items-center gap-2">
+                <Show when="signed-out">
+                  <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                    <Button variant="outline" size="sm">
+                      Sign in
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                    <Button size="sm">Sign up</Button>
+                  </SignUpButton>
+                </Show>
+                <Show when="signed-in">
+                  <UserButton />
+                </Show>
+              </div>
+            </header>
+            {children}
+            <Toaster richColors closeButton position="top-center" />
+          </TooltipProvider>
         </ClerkProvider>
       </body>
     </html>

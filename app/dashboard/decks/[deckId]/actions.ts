@@ -4,17 +4,21 @@ import { auth } from "@clerk/nextjs/server";
 
 import type { CreateCardActionResult } from "@/interfaces/create-card.interface";
 import type { DeleteCardActionResult } from "@/interfaces/delete-card.interface";
+import type { GenerateCardsWithAiActionResult } from "@/interfaces/generate-cards-with-ai.interface";
 import type { UpdateCardActionResult } from "@/interfaces/update-card.interface";
 import type { UpdateDeckActionResult } from "@/interfaces/update-deck.interface";
+import { generateFlashcardsForDeck } from "@/lib/ai/generate-deck-flashcards";
 import {
   deleteCardForOwnedDeck,
   insertCardForOwnedDeck,
+  insertManyCardsForOwnedDeck,
   updateCardForOwnedDeck,
 } from "@/lib/db/queries/cards";
-import { updateDeckForUser } from "@/lib/db/queries/decks";
+import { getDeckForUser, updateDeckForUser } from "@/lib/db/queries/decks";
 import {
   createCardPayloadSchema,
   deleteCardPayloadSchema,
+  generateCardsWithAiPayloadSchema,
   updateCardPayloadSchema,
 } from "@/lib/validation/cards";
 import { updateDeckPayloadSchema } from "@/lib/validation/decks";
@@ -124,4 +128,66 @@ export async function deleteCardAction(
   }
 
   return { ok: true };
+}
+
+export async function generateCardsWithAiAction(
+  input: unknown,
+): Promise<GenerateCardsWithAiActionResult> {
+  const { userId, has } = await auth();
+  if (!userId) {
+    return { ok: false, message: "You must be signed in." };
+  }
+
+  const canUseAi =
+    has({ plan: "pro" }) || has({ feature: "ai_flashcard_generation" });
+  if (!canUseAi) {
+    return {
+      ok: false,
+      message: "AI flashcard generation is not available on your plan.",
+    };
+  }
+
+  const parsed = generateCardsWithAiPayloadSchema.safeParse(input);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]?.message;
+    return { ok: false, message: first ?? "Invalid request." };
+  }
+
+  const { deckId } = parsed.data;
+  const deck = await getDeckForUser(userId, deckId);
+  if (!deck) {
+    return {
+      ok: false,
+      message: "Deck not found or you don't have permission to edit it.",
+    };
+  }
+
+  const deckReadyForAi =
+    deck.title.trim().length > 0 && Boolean(deck.description?.trim());
+  if (!deckReadyForAi) {
+    return {
+      ok: false,
+      message:
+        "Add a description to this deck (and ensure it has a title) before generating cards.",
+    };
+  }
+
+  const generated = await generateFlashcardsForDeck(
+    deck.title,
+    deck.description,
+  );
+  if (!generated.ok) {
+    return { ok: false, message: generated.message };
+  }
+
+  const saved = await insertManyCardsForOwnedDeck(
+    userId,
+    deckId,
+    generated.cards,
+  );
+  if (!saved) {
+    return { ok: false, message: "Couldn't save generated cards." };
+  }
+
+  return { ok: true, inserted: saved.inserted };
 }

@@ -50,6 +50,36 @@ export async function insertCardForOwnedDeck(
   return rows[0];
 }
 
+export async function insertManyCardsForOwnedDeck(
+  clerkUserId: string,
+  deckId: number,
+  items: CardUpdateFields[],
+): Promise<{ inserted: number } | undefined> {
+  if (items.length === 0) {
+    return undefined;
+  }
+
+  const owned = await db
+    .select({ id: decks.id })
+    .from(decks)
+    .where(and(eq(decks.id, deckId), eq(decks.clerkUserId, clerkUserId)))
+    .limit(1);
+
+  if (!owned[0]) {
+    return undefined;
+  }
+
+  await db.insert(cards).values(
+    items.map((fields) => ({
+      deckId,
+      front: fields.front,
+      back: fields.back,
+    })),
+  );
+
+  return { inserted: items.length };
+}
+
 export async function updateCardForOwnedDeck(
   clerkUserId: string,
   deckId: number,

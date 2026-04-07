@@ -17,6 +17,7 @@ import { AddCardDialog } from "@/app/dashboard/decks/[deckId]/add-card-dialog";
 import { DeleteCardDialog } from "@/app/dashboard/decks/[deckId]/delete-card-dialog";
 import { EditCardDialog } from "@/app/dashboard/decks/[deckId]/edit-card-dialog";
 import { EditDeckDialog } from "@/app/dashboard/decks/[deckId]/edit-deck-dialog";
+import { GenerateCardsWithAiButton } from "@/app/dashboard/decks/[deckId]/generate-cards-with-ai-button";
 import type { DeckPageProps } from "@/interfaces/deck-page.interface";
 import { listCardsForOwnedDeck } from "@/lib/db/queries/cards";
 import { getDeckForUser } from "@/lib/db/queries/decks";
@@ -60,10 +61,13 @@ export async function generateMetadata({
 }
 
 export default async function DeckPage({ params }: DeckPageProps) {
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     return null;
   }
+
+  const canUseAi =
+    has({ plan: "pro" }) || has({ feature: "ai_flashcard_generation" });
 
   const { deckId: raw } = await params;
   const deckId = parseDeckId(raw);
@@ -77,6 +81,9 @@ export default async function DeckPage({ params }: DeckPageProps) {
   }
 
   const cardList = await listCardsForOwnedDeck(userId, deckId);
+
+  const deckReadyForAi =
+    deck.title.trim().length > 0 && Boolean(deck.description?.trim());
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 py-8">
@@ -144,7 +151,14 @@ export default async function DeckPage({ params }: DeckPageProps) {
             >
               Cards
             </h2>
-            <AddCardDialog deckId={deck.id} />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <GenerateCardsWithAiButton
+                deckId={deck.id}
+                canUseAi={canUseAi}
+                deckReadyForAi={deckReadyForAi}
+              />
+              <AddCardDialog deckId={deck.id} />
+            </div>
           </div>
 
           {cardList.length === 0 ? (
