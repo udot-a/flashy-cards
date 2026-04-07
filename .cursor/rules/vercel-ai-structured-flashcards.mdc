@@ -1,0 +1,42 @@
+---
+description: Vercel AI SDK — structured output for AI flashcard generation (Zod + Output.object)
+globs: lib/**/*.ts,app/**/actions*.ts
+alwaysApply: false
+---
+
+# Vercel AI: structured flashcards (`generateText` + `Output.object`)
+
+Use the **`ai`** package (`generateText`, `Output`) with **Zod** so the model returns a fixed shape: an array of **`cardCount`** items, each with **`front`** and **`back`** strings.
+
+- **Exact count:** use `z.array(...).length(cardCount)` so validation matches the requested number.
+- **Prompt:** repeat the count in natural language (e.g. “exactly N cards”) so the model aligns with the schema.
+
+```ts
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const cardCount = 10;
+
+const { output } = await generateText({
+  model: 'openai/gpt-5.3-chat',
+  output: Output.object({
+    schema: z.object({
+      cards: z
+        .array(
+          z.object({
+            front: z.string(),
+            back: z.string(),
+          }),
+        )
+        .length(cardCount),
+    }),
+  }),
+  prompt: `Generate exactly ${cardCount} flashcards on <topic>. Each card has a concise front (question or prompt) and a clear back (answer).`,
+});
+
+// output.cards — { front: string; back: string }[]
+```
+
+**Range instead of exact N:** e.g. `z.array(cardShape).min(5).max(15)` and adjust the prompt accordingly.
+
+Server actions must still enforce **Clerk** `has({ feature: 'ai_flashcard_generation' })` and deck ownership per [clerk-billing.mdc](mdc:.cursor/rules/clerk-billing.mdc) and [clerk-auth-data-isolation.mdc](mdc:.cursor/rules/clerk-auth-data-isolation.mdc).
