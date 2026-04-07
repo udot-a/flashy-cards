@@ -1,0 +1,63 @@
+---
+description: Clerk Billing (B2C)—plans, features, gating; no parallel billing
+alwaysApply: true
+---
+
+# Clerk Billing (subscriptions and payments)
+
+- **Single billing system:** Subscriptions and payments are handled only by **Clerk Billing** (Stripe via Clerk). Do not add Stripe Checkout sessions, Paddle, or other billing SDKs for app entitlements unless the project explicitly migrates.
+
+- **Dashboard:** Plans and features are configured in the Clerk Dashboard ([Billing settings](https://dashboard.clerk.com/last-active?path=billing/settings), [Plans](https://dashboard.clerk.com/last-active?path=billing/plans)). Use the Clerk **development gateway** in dev when appropriate.
+
+## Canonical plan slugs
+
+Use these **exact** strings in `has({ plan: '...' })`, `<Protect plan="...">`, and anywhere Clerk expects a plan key:
+
+| Plan        | Slug         |
+|------------|--------------|
+| Free tier  | `free_user`  |
+| Paid tier  | `pro`        |
+
+## Canonical feature slugs
+
+Use these **exact** strings in `has({ feature: '...' })`, `<Protect feature="...">`, and Clerk Dashboard feature definitions:
+
+| Feature                 | Slug                    |
+|-------------------------|-------------------------|
+| Deck limit (free)       | `3_deck_limit`          |
+| Unlimited decks         | `unlimited_decks`       |
+| AI flashcard generation | `ai_flashcard_generation` |
+
+Prefer **feature** checks for entitlements (e.g. deck caps, AI tools); use **plan** when the whole surface is plan-scoped.
+
+## UI: pricing page
+
+- Expose plans with Clerk’s `<PricingTable />` from `@clerk/nextjs` on a **dedicated route** (e.g. `app/pricing/page.tsx`). Wrap layout with the app’s usual shell (shadcn layout primitives); do not replace `<PricingTable />` with a custom pricing grid unless product explicitly requires it.
+
+## Gating: server (`has()`)
+
+- In Server Components, Route Handlers, and Server Actions, use `auth()` from `@clerk/nextjs/server` and **`has()`** for plan/feature checks:
+
+```ts
+const { has } = await auth()
+const canUseAi = has({ feature: 'ai_flashcard_generation' })
+const isPro = has({ plan: 'pro' })
+```
+
+- **Never** trust client-only gating for security-sensitive or data-enforcing rules: enforce the same checks on the server (actions + queries). See [clerk-auth-data-isolation.mdc](mdc:.cursor/rules/clerk-auth-data-isolation.mdc) for ownership.
+
+## Gating: client (`<Protect>`)
+
+- For React UI, use `<Protect>` from `@clerk/nextjs` with `plan` or `feature` and a `fallback` (use shadcn components for fallback content per [shadcn-ui-components.mdc](mdc:.cursor/rules/shadcn-ui-components.mdc)).
+
+```tsx
+<Protect feature="ai_flashcard_generation" fallback={<p>Upgrade to use AI generation.</p>}>
+  {children}
+</Protect>
+```
+
+## References (Clerk)
+
+- [`has()`](https://clerk.com/docs/references/backend/types/auth-object#has) on the auth object  
+- [`<Protect>`](https://clerk.com/docs/components/protect)  
+- [`<PricingTable />`](https://clerk.com/docs/components/pricing-table)
