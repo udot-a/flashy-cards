@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import type { CardListRow } from "@/interfaces/flash-card.interface";
 import type { CardUpdateFields } from "@/interfaces/update-card.interface";
@@ -80,13 +80,12 @@ export async function insertManyCardsForOwnedDeck(
   return { inserted: items.length };
 }
 
-export async function updateCardForOwnedDeck(
+function ownedCardIdSubquery(
   clerkUserId: string,
   deckId: number,
   cardId: number,
-  fields: CardUpdateFields,
-): Promise<{ id: number } | undefined> {
-  const match = await db
+) {
+  return db
     .select({ id: cards.id })
     .from(cards)
     .innerJoin(decks, eq(cards.deckId, decks.id))
@@ -96,13 +95,15 @@ export async function updateCardForOwnedDeck(
         eq(cards.deckId, deckId),
         eq(decks.clerkUserId, clerkUserId),
       ),
-    )
-    .limit(1);
+    );
+}
 
-  if (!match[0]) {
-    return undefined;
-  }
-
+export async function updateCardForOwnedDeck(
+  clerkUserId: string,
+  deckId: number,
+  cardId: number,
+  fields: CardUpdateFields,
+): Promise<{ id: number } | undefined> {
   const rows = await db
     .update(cards)
     .set({
@@ -110,7 +111,7 @@ export async function updateCardForOwnedDeck(
       back: fields.back,
       updatedAt: new Date(),
     })
-    .where(eq(cards.id, cardId))
+    .where(inArray(cards.id, ownedCardIdSubquery(clerkUserId, deckId, cardId)))
     .returning({ id: cards.id });
 
   return rows[0];
@@ -121,23 +122,10 @@ export async function deleteCardForOwnedDeck(
   deckId: number,
   cardId: number,
 ): Promise<boolean> {
-  const match = await db
-    .select({ id: cards.id })
-    .from(cards)
-    .innerJoin(decks, eq(cards.deckId, decks.id))
-    .where(
-      and(
-        eq(cards.id, cardId),
-        eq(cards.deckId, deckId),
-        eq(decks.clerkUserId, clerkUserId),
-      ),
-    )
-    .limit(1);
+  const rows = await db
+    .delete(cards)
+    .where(inArray(cards.id, ownedCardIdSubquery(clerkUserId, deckId, cardId)))
+    .returning({ id: cards.id });
 
-  if (!match[0]) {
-    return false;
-  }
-
-  await db.delete(cards).where(eq(cards.id, cardId));
-  return true;
+  return rows.length > 0;
 }
