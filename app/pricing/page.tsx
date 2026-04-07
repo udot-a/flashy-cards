@@ -1,9 +1,9 @@
-import { PricingTable } from "@clerk/nextjs";
-import type { Metadata } from "next";
+import { PricingTable } from '@clerk/nextjs';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Pricing",
-  description: "Plans and features for Flashy Cards",
+  title: 'Pricing',
+  description: 'Plans and features for Flashy Cards',
 };
 
 export default function PricingPage() {
